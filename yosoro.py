@@ -1,6 +1,7 @@
 #coding=utf-8
 from flask import *
 import json
+import os
 
 app=Flask(__name__)
 app.debug=True
@@ -24,4 +25,4 @@ def live(liveid):
             return render_template('live.html',mapinfo=mapinfo)
     abort(404)
 
-app.run('0.0.0.0',80)
+app.run('0.0.0.0',int(os.environ.get('PORT',80))
