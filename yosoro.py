@@ -25,4 +25,4 @@ def live(liveid):
             return render_template('live.html',mapinfo=mapinfo)
     abort(404)
 
-app.run('0.0.0.0',int(os.environ.get('PORT',80))
+app.run('0.0.0.0',int(os.environ.get('PORT',80)))
