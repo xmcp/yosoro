@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>Yosoro! Live</title>
+
+    <style>
+        body {
+            background: transparent;
+            color: white;
+            font-family: 'Segoe UI', '微软雅黑', 'Microsoft Yahei', '黑体', serif;
+            text-shadow: 0 0 5px black;
+        }
+        a {
+            color: inherit !important;
+        }
+        p {
+            margin: 0;
+        }
+    </style>
+    <style>
+        #map-title {
+            position: fixed;
+            top: 10px; left: 20px;
+            font-size: 25px;
+        }
+        #back-btn {
+            position: fixed;
+            top: 5px; right: 10px;
+            height: 1em; width: 1em;
+            text-decoration: none;
+            font-size: 25px;
+        }
+        #loading-indicator {
+            position: fixed;
+            top: 15px; right: 50px;
+            font-size: 15px;
+        }
+        #innocent-holder {
+            position: fixed;
+            left: 0; bottom: 100px;
+            width: 100%;
+            height: 12px;
+            background-color: lightgreen;
+            z-index: 20;
+            opacity: .7;
+        }
+        .pos-indicator-text {
+            position: fixed;
+            bottom: 98px;
+            width: 11.11111%;
+            text-align: center;
+            font-size: 10px;
+            z-index: 30;
+            font-weight: bold;
+        }
+        .note {
+            position: fixed;
+            z-index: 50;
+            width: 11.11111%;
+        }
+        .note-normal {
+            background-color: white;
+        }
+        .note-event {
+            background-color: lightskyblue;
+        }
+        .note-slider {
+            background-color: white;
+        }
+        .note-killer {
+            background-color: yellow;
+        }
+        #player {
+            position: fixed;
+            bottom: 0; left: 0;
+            width: 100%;
+        }
+    </style>
+    <script src="/static/jquery.min.js"></script>
+    <script>
+        var EFFECT_IDS={
+          1: 'normal',
+          2: 'event',
+          3: 'slider',
+          4: 'killer'
+        };
+        var PREFETCH_TIME=4;
+
+        var falling_speed={{ 0.5/mapinfo.notes_speed }},
+          info={},
+          notes_map={},
+          dom={},
+          lasttime=null;
+
+        function back_to_title() {
+          new Audio('/static/back.ogg').play();
+          setTimeout(function() {
+            location.href='{{ url_for('welcome_page') }}';
+          },200);
+        }
+
+        function redraw_notes(time) {
+          $.each(dom,function(id,$elem) {
+            $elem.css('bottom',100+(info[id].time-time)*1000*falling_speed);
+          });
+        }
+
+        function seek(time) {
+          var inttime=Math.floor(time);
+          for(var id in dom) {
+            if (dom.hasOwnProperty(id))
+              if(notes_map[inttime].indexOf(id)===-1) {
+                    dom[id].remove();
+                    delete dom[id];
+                }
+          }
+          var objs=notes_map[inttime];
+          if(!objs)
+            return;
+          var count=objs.length;
+          objs.forEach(function(id) {
+            if(dom[id])
+              return true; // continue
+            var note=info[id];
+            var $elem=$(document.createElement('div'))
+              .addClass('note')
+              .addClass('note-'+note.type)
+              .css('left',note.channel*100/9+'%')
+              .css('height',12+(note.endtime-note.time)*1000*falling_speed);
+            $stage.append($elem);
+            dom[id]=$elem;
+          });
+        }
+
+        function load_map() {
+          $.get('https://rawfile.loveliv.es/livejson/{{ mapinfo.notes_setting_asset }}')
+            .fail(function() {
+              alert('谱面加载失败！');
+            })
+            .done(function(data) {
+              data.sort(function(a,b) {
+                return a['timing_sec']-b['timing_sec'];
+              });
+              for(var time=-PREFETCH_TIME-1;time<=Math.ceil(data[data.length-1]['timing_sec']+2);time++)
+                notes_map[time]=[];
+
+              $.each(data,function(id,note) {
+                info[id]={
+                  type: EFFECT_IDS[note['effect']],
+                  time: note['timing_sec'],
+                  endtime: EFFECT_IDS[note['effect']]==='slider' ? note['timing_sec']+note['effect_value'] : note['timing_sec'],
+                  channel: 9-note['position']
+                };
+                for(var time=Math.floor(info[id].time-PREFETCH_TIME);time<=Math.ceil(info[id].endtime+1);time++)
+                  notes_map[time].push(id);
+              });
+
+              routine();
+              $('#loading-indicator').fadeOut(100);
+            });
+        }
+
+        function routine() {
+          var time=player.currentTime,
+            inttime=Math.floor(time);
+          if(inttime!==lasttime) {
+            seek(time);
+            lasttime=inttime;
+          }
+          redraw_notes(time);
+          requestAnimationFrame(routine);
+        }
+
+        $(function() {
+          window.$body=$('body');
+          window.$stage=$('#stage');
+          window.player=document.getElementById('player');
+          if(window===top.window)
+            $body
+              .css('background','black url(/static/background.png) no-repeat center center fixed')
+              .css('background-size','cover');
+          for(var i=0;i<9;i++)
+            $body.append(
+              $('<span class="pos-indicator-text" />').css('left',i/9*100+'%').text('9876C4321'.charAt(i))
+            );
+          load_map();
+        })
+    </script>
+</head>
+
+<body>
+    <span id="map-title">{{ mapinfo.name }} :: {{ mapinfo.difficulty_text }}</span>
+    <a id="back-btn" href="#" onclick="back_to_title()">&times;</a>
+    <span id="loading-indicator">加载谱面……</span>
+
+    <div id="stage"></div>
+    <div id="innocent-holder"></div>
+
+    <audio id="player" src="https://rawfile.loveliv.es/{{ mapinfo.sound_asset }}" preload="auto" controls></audio>
+</body>
+</html>
