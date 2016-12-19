@@ -1,10 +1,13 @@
 #coding=utf-8
 from flask import *
+from flask_compress import Compress
 import json
 import os
 
 app=Flask(__name__)
 app.debug=True
+app.config['COMPRESS_LEVEL']=9
+Compress(app)
 app.jinja_options['extensions'].append('jinja2.ext.do')
 
 with open('static/maps.min.json') as f:
