@@ -238,7 +238,7 @@
               });
               for(
                 var time=Math.floor(-PREFETCH_TIME-OFFSET_MS*.001-1);
-                time<=Math.ceil(data[data.length-1]['timing_sec']-OFFSET_MS*.001+2);
+                time<=Math.ceil(data[data.length-1]['timing_sec']+data[data.length-1]['effect_value']-OFFSET_MS*.001+2);
                 time++
               )
                 notes_map[time]=[];
