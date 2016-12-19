@@ -17,6 +17,10 @@
         p {
             margin: 0;
         }
+        .fade {
+            opacity: 0;
+            transition: opacity 1s ease-in;
+        }
     </style>
     <style>
         #map-title {
@@ -58,6 +62,11 @@
             position: fixed;
             z-index: 50;
             width: 11.11111%;
+            transition: opacity .5s linear;
+        }
+        .note.hit {
+            background-color: orange !important;
+            opacity: 0;
         }
         .note-normal {
             background-color: white;
@@ -68,6 +77,9 @@
         .note-slider {
             background-color: white;
         }
+        .note-slider.hold {
+            background-color: orange !important;
+        }
         .note-killer {
             background-color: yellow;
         }
@@ -75,6 +87,15 @@
             position: fixed;
             bottom: 0; left: 0;
             width: 100%;
+            z-index: 100;
+        }
+        #combo-text {
+            position: fixed;
+            bottom: 50px; left: 0;
+            width: 100%;
+            text-align: center;
+            font-family: Consolas, Courier, monospace;
+            font-size: 30px;
         }
     </style>
     <script src="/static/jquery.min.js"></script>
@@ -86,23 +107,97 @@
           4: 'killer'
         };
         var PREFETCH_TIME=4;
+        if(top.global_delay && !isNaN(top.global_delay))
+          var OFFSET_MS=top.global_delay;
+        else
+          OFFSET_MS=150;
+        console.log('offset is '+OFFSET_MS);
 
         var falling_speed={{ 0.5/mapinfo.notes_speed }},
           info={},
           notes_map={},
           dom={},
-          lasttime=null;
+          hitted={},
+          lasttime=null,
+          maxcombo={{ mapinfo.s_rank_combo }};
 
         function back_to_title() {
-          new Audio('/static/back.ogg').play();
+          if(top && top._play_sound)
+            top._play_sound('/static/back.ogg');
+          else
+            new Audio('/static/back.ogg').play();
           setTimeout(function() {
             location.href='{{ url_for('welcome_page') }}';
           },200);
         }
 
-        function redraw_notes(time) {
+        function keyboard_callback(evt) {
+          if(evt.keyCode===32) { // space
+            if(player.paused)
+              player.play();
+            else
+              player.pause();
+            return;
+          }
+          else if(evt.keyCode===104) // h
+            player.currentTime-=5;
+          else if(evt.keyCode===106) // j
+            player.currentTime-=1;
+          else if(evt.keyCode===117) // u
+            player.currentTime-=.05;
+          else if(evt.keyCode===105) // i
+            player.currentTime+=.05;
+          else if(evt.keyCode===107) // k
+            player.currentTime+=1;
+          else if(evt.keyCode===108) // l
+            player.currentTime+=5;
+          fixtime();
+          seek(player.currentTime);
+          redraw_notes(player.currentTime,true);
+        }
+
+        function setcombo(combo) {
+          combo=parseInt(combo)+1;
+          $combo_text.text('Combo: '+combo+' / '+maxcombo).removeClass('fade');
+          setTimeout(function() {
+            $combo_text.addClass('fade');
+          },100);
+        }
+
+        function fixtime() {
+          hitted={};
+          for(var id in dom)
+            if(dom.hasOwnProperty(id)) {
+              dom[id].remove();
+              delete dom[id];
+            }
+        }
+
+        function redraw_notes(time,silenced) {
           $.each(dom,function(id,$elem) {
-            $elem.css('bottom',100+(info[id].time-time)*1000*falling_speed);
+            $elem.css('bottom',100+Math.max(0,(info[id].time-time)*1000*falling_speed));
+            if (info[id].time<=time) {
+              if (info[id].type==='slider') {
+                $elem.css('height',12+Math.max(0,(info[id].endtime-time)*1000*falling_speed));
+                if (!hitted[id]) {
+                  hitted[id]=1;
+                  if(!silenced) new Audio('/static/hit.ogg').play();
+                  $elem.addClass('hold');
+                  setcombo(id);
+                }
+                else if(info[id].endtime<=time && hitted[id]===1) {
+                  hitted[id]=2;
+                  if(!silenced) new Audio('/static/hit.ogg').play();
+                  $elem.removeClass('hold').addClass('hit');
+                }
+              }
+              else if(!hitted[id]) {
+                hitted[id]=true;
+                if(!silenced) new Audio('/static/hit.ogg').play();
+                $elem.addClass('hit');
+                setcombo(id);
+              }
+            }
           });
         }
 
@@ -110,7 +205,7 @@
           var inttime=Math.floor(time);
           for(var id in dom) {
             if (dom.hasOwnProperty(id))
-              if(notes_map[inttime].indexOf(id)===-1) {
+              if(notes_map[inttime].indexOf(parseInt(id))===-1) {
                     dom[id].remove();
                     delete dom[id];
                 }
@@ -118,7 +213,6 @@
           var objs=notes_map[inttime];
           if(!objs)
             return;
-          var count=objs.length;
           objs.forEach(function(id) {
             if(dom[id])
               return true; // continue
@@ -142,10 +236,15 @@
               data.sort(function(a,b) {
                 return a['timing_sec']-b['timing_sec'];
               });
-              for(var time=-PREFETCH_TIME-1;time<=Math.ceil(data[data.length-1]['timing_sec']+2);time++)
+              for(
+                var time=Math.floor(-PREFETCH_TIME-OFFSET_MS*.001-1);
+                time<=Math.ceil(data[data.length-1]['timing_sec']-OFFSET_MS*.001+2);
+                time++
+              )
                 notes_map[time]=[];
 
               $.each(data,function(id,note) {
+                note['timing_sec']-=OFFSET_MS*.001;
                 info[id]={
                   type: EFFECT_IDS[note['effect']],
                   time: note['timing_sec'],
@@ -158,6 +257,7 @@
 
               routine();
               $('#loading-indicator').fadeOut(100);
+              player.play();
             });
         }
 
@@ -165,6 +265,8 @@
           var time=player.currentTime,
             inttime=Math.floor(time);
           if(inttime!==lasttime) {
+            if(inttime<lasttime)
+              fixtime();
             seek(time);
             lasttime=inttime;
           }
@@ -175,6 +277,7 @@
         $(function() {
           window.$body=$('body');
           window.$stage=$('#stage');
+          window.$combo_text=$('#combo-text');
           window.player=document.getElementById('player');
           if(window===top.window)
             $body
@@ -184,6 +287,7 @@
             $body.append(
               $('<span class="pos-indicator-text" />').css('left',i/9*100+'%').text('9876C4321'.charAt(i))
             );
+          $body.keypress(keyboard_callback);
           load_map();
         })
     </script>
@@ -196,6 +300,7 @@
 
     <div id="stage"></div>
     <div id="innocent-holder"></div>
+    <div id="combo-text"></div>
 
     <audio id="player" src="https://rawfile.loveliv.es/{{ mapinfo.sound_asset }}" preload="auto" controls></audio>
 </body>

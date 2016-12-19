@@ -57,11 +57,20 @@
         }
         .map-title {
             font-size: 1.2em;
-            /* transition: opacity .1s; */
             height: 0;
+            z-index: 5;
+        }
+        .for-search {
+            height: 0;
+            color: rgba(255,255,255,0);
+            text-shadow: none;
+            z-index: 0;
+        }
+        .for-search::selection {
+            opacity: 0;
         }
         .map-item:hover .map-title {
-            opacity: .6;
+            color: yellow;
         }
         .map-difficulties {
             text-align: right;
@@ -109,6 +118,12 @@
     <script src="/static/jquery.min.js"></script>
 
     <script>
+        var global_delay=150; // will update in welcome.html and load in live.html
+
+        function _play_sound(uri) { // for live.html
+          new Audio(uri).play();
+        }
+
         function show_map_info(target) {
           ['name','chinese','english','difficulty','stars','combo'].forEach(function(elem) {
             $('#map-'+elem).text(target.data(elem));
@@ -129,6 +144,7 @@
 
         var hover_cnt=0;
         $(function() {
+          window.mainframe=document.getElementById('main-frame');
           $('.map-item,.map-difficulty').hover(
             function() {
               hover_cnt++;
@@ -148,6 +164,12 @@
             setTimeout(function() {
               switch_panel(false);
             },20);
+          });
+          $('body').keypress(function(e) {
+            if(mainframe.contentWindow.keyboard_callback) {
+              mainframe.contentWindow.keyboard_callback(e);
+              e.preventDefault();
+            }
           })
         })
     </script>
@@ -158,6 +180,8 @@
         {% for group in maps|groupby('name')|sort(attribute='list.0.live_track_id') %}
             <div class="map-item">
                 <p class="map-title">{{ group.grouper }}</p>
+                <p class="for-search">{{ group.list[0].name_translations.english }}</p>
+                <p class="for-search">{{ group.list[0].name_translations.chinese }}</p>
                 <div class="map-difficulties">
                     {% for item in group.list %}
                         <a href="{{ url_for('live',liveid=item.live_setting_id) }}" target="main-frame" class="map-difficulty"

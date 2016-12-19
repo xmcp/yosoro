@@ -15,7 +15,7 @@
         #container {
             position: absolute;
             top: 0; bottom: 0; left: 0; right: 0;
-            width: 100%; height: 200px;
+            width: 100%; height: 250px;
             margin: auto;
             text-align: center;
         }
@@ -23,19 +23,44 @@
             font-size: 3em;
             font-weight: normal;
         }
-        h1 small {
-            font-size: .5em;
+        small {
+            font-size: .7em;
         }
         a {
             color: inherit !important;
         }
-        p {
+        h1, p {
             margin: 0;
         }
+        #browser-warning:empty {
+            display: none;
+        }
+        #browser-warning {
+            display: inline-block;
+            background-color: yellow;
+            color: black;
+            text-shadow: none;
+            border-radius: 10px;
+            padding: 10px 50px 10px 50px;
+        }
     </style>
+    <script src="/static/jquery.min.js"></script>
+
     <script>
         if(top.window===window)
           top.window.location.href='/';
+
+        function set_delay() {
+          top.window.global_delay=parseInt($input_box.val());
+          $input_box.val(top.window.global_delay);
+        }
+
+        $(function() {
+          window.$input_box=$('#delay');
+          $input_box.val(top.window.global_delay);
+          if(navigator.userAgent.indexOf('AppleWebKit/')===-1)
+            $('#browser-warning').text('建议您使用 Google Chrome 浏览器访问本站。')
+        })
     </script>
 </head>
 
@@ -45,8 +70,19 @@
             Yϕsϕrϕ
             <small>/ by @xmcp</small>
         </h1>
+        <br>
         <p>来看看精彩绝伦的自动表演。</p>
-        <p>Special thanks to <a href="http://db.loveliv.es" target="_blank">db.loveliv.es</a></p>
+        <p><small>Special thanks to <a href="http://db.loveliv.es" target="_blank">db.loveliv.es</a></small></p>
+        <br>
+        <p>
+            <input id="delay" type="number" min="-1000" max="1000" placeholder="(ms)" value="160">
+            <button onclick="set_delay()">设置打击延迟</button>
+        </p>
+        <br>
+        <p>键盘快捷键：</p>
+        <p><small>空格 暂停 &nbsp; U/I 逐帧快进 &nbsp; J/K 一秒快进 &nbsp; H/L 五秒快进</small></p>
+        <br>
+        <p id="browser-warning"></p>
     </div>
 
 </body>
