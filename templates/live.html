@@ -146,6 +146,7 @@
           savetime=null,
           muted=false,
           unmute_worker=null,
+          maxtime=0,
           maxcombo={{ mapinfo.s_rank_combo }};
 
         function play_sound(uri) {
@@ -339,6 +340,8 @@
                     delete auxline_dom[aux];
                 }
           }
+          if(inttime>maxtime)
+            return;
           notes_map[inttime].forEach(function(id) {
             if(dom[id])
               return true; // continue
@@ -383,9 +386,10 @@
               data.sort(function(a,b) {
                 return a['timing_sec']-b['timing_sec'];
               });
+              maxtime=Math.ceil(data[data.length-1]['timing_sec']+data[data.length-1]['effect_value']-OFFSET_MS*.001+2);
               for(
                 time=Math.floor(-PREFETCH_TIME-OFFSET_MS*.001-1);
-                time<=Math.ceil(data[data.length-1]['timing_sec']+data[data.length-1]['effect_value']-OFFSET_MS*.001+2);
+                time<=maxtime;
                 time++
               ) {
                 notes_map[time]=[];
