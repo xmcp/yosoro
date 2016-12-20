@@ -69,8 +69,11 @@
         .for-search::selection {
             opacity: 0;
         }
-        .map-item:hover .map-title {
+        .map-item.selected .map-title {
             color: yellow;
+        }
+        .map-item.selected .map-title:before {
+            content: '♪ ';
         }
         .map-difficulties {
             text-align: right;
@@ -114,14 +117,23 @@
         #map-name {
             font-size: 1.5em;
         }
+        #map-chinese:after, #map-english:after, #map-chinese:before, #map-english:before {
+            content: '　';
+        }
     </style>
     <script src="/static/jquery.min.js"></script>
 
     <script>
         var global_delay=150; // will update in welcome.html and load in live.html
 
-        function _play_sound(uri) { // for live.html
+        function _api_play_sound(uri) { // for live.html
           new Audio(uri).play();
+        }
+
+        function _api_set_current(id) {
+          $('.map-item.selected').removeClass('selected');
+          if(id!==null)
+            $('.map-item#map-id-'+id).addClass('selected');
         }
 
         function show_map_info(target) {
@@ -178,15 +190,16 @@
 <body>
     <div id="map-list">
         {% for group in maps|groupby('name')|sort(attribute='list.0.live_track_id') %}
-            <div class="map-item">
+            <div class="map-item" id="map-id-{{ group.list[0].live_track_id }}">
                 <p class="map-title">{{ group.grouper }}</p>
-                <p class="for-search">{{ group.list[0].name_translations.english }}</p>
-                <p class="for-search">{{ group.list[0].name_translations.chinese }}</p>
+                <p class="for-search">{{ group.list[0].name_translations.english or '' }}</p>
+                <p class="for-search">{{ group.list[0].name_translations.chinese or '' }}</p>
                 <div class="map-difficulties">
                     {% for item in group.list %}
                         <a href="{{ url_for('live',liveid=item.live_setting_id) }}" target="main-frame" class="map-difficulty"
                             data-name="{{ item.name }}" data-difficulty="{{ item.difficulty_text }}"
-                            data-chinese="{{ item.name_translations.chinese }}" data-english="{{ item.name_translations.english }}"
+                            data-chinese="{{ item.name_translations.chinese or ''}}"
+                            data-english="{{ item.name_translations.english or '' }}"
                             data-combo="{{ item.s_rank_combo }}" data-stars="{{ item.stage_level }}"
                             data-icon="{{ item.live_icon_asset }}" data-attr="{{ item.attribute_icon_id }}"
                         >

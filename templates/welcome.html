@@ -59,7 +59,8 @@
           window.$input_box=$('#delay');
           $input_box.val(top.window.global_delay);
           if(navigator.userAgent.indexOf('AppleWebKit/')===-1)
-            $('#browser-warning').text('建议您使用 Google Chrome 浏览器访问本站。')
+            $('#browser-warning').text('推荐使用 Google Chrome 浏览器访问本站。');
+          top.window._api_set_current(null);
         })
     </script>
 </head>
@@ -79,8 +80,9 @@
             <button onclick="set_delay()">设置打击延迟</button>
         </p>
         <br>
-        <p>键盘快捷键：</p>
-        <p><small>空格 暂停 &nbsp; U/I 逐帧快进 &nbsp; J/K 一秒快进 &nbsp; H/L 五秒快进</small></p>
+        <p>操作说明：</p>
+        <p><small>空格：暂停 &nbsp; 左键：鼠标控制 &nbsp; S/A：快速回放</small></p>
+        <p><small>U/I：逐帧快进 &nbsp; J/K：一秒快进 &nbsp; H/L：五秒快进</small></p>
         <br>
         <p id="browser-warning"></p>
     </div>
