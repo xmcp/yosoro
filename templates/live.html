@@ -313,9 +313,8 @@
             }
           for(var aux in auxline_dom)
             if(auxline_dom.hasOwnProperty(aux)) {
-              aux=parseFloat(aux);
               var
-                delta=(aux-time)*1000*falling_speed,
+                delta=(parseFloat(aux)-time)*1000*falling_speed,
                 auxelem=auxline_dom[aux];
               if(delta<0 && !auxelem.classList.contains('hidden'))
                 auxelem.classList.add('hidden');
@@ -326,14 +325,16 @@
 
         function seek(time) {
           var inttime=Math.floor(time);
-          for(var id in dom) {
+          var id,aux,elem,i;
+          for(id in dom) {
             if (dom.hasOwnProperty(id))
               if(notes_map[inttime].indexOf(parseInt(id))===-1) {
                     stage.removeChild(dom[id]);
                     delete dom[id];
+                    //console.log('remove '+id);
                 }
           }
-          for(var aux in auxline_dom) {
+          for(aux in auxline_dom) {
             if(auxline_dom.hasOwnProperty(aux))
               if(auxline_map[inttime].indexOf(parseInt(aux))===-1) {
                     stage.removeChild(auxline_dom[aux]);
@@ -342,39 +343,42 @@
           }
           if(inttime>maxtime)
             return;
-          notes_map[inttime].forEach(function(id) {
+          for(i=0;i<notes_map[inttime].length;i++) {
+            id=notes_map[inttime][i];
             if(dom[id])
-              return true; // continue
+              continue;
             var note=info[id];
-            var elem=document.createElement('div');
+            elem=document.createElement('div');
             elem.className='note note-'+note.type;
             elem.style.left=note.channel*100/9+'%';
             elem.style.height=(12+(note.endtime-note.time)*1000*falling_speed)+'px';
             stage.appendChild(elem);
             dom[id]=elem;
-          });
-          auxline_map[inttime].forEach(function(aux) {
+            //console.log('add '+id);
+          }
+          for(i=0;i<auxline_map[inttime].length;i++) {
+            aux=auxline_map[inttime][i];
             if(auxline_dom[aux])
-              return true; // continue
-            var elem=document.createElement('div');
+              continue;
+            elem=document.createElement('div');
             elem.className='auxline';
             stage.appendChild(elem);
             auxline_dom[aux]=elem;
-          })
+          }
         }
 
         function load_map() {
           var DELTA=.001; // aux line timing mistake, in s
           function _add_auxline(t) {
             var fixedt=parseInt(t/DELTA)*DELTA;
-            if(auxline[fixedt])
-              auxline[fixedt]++;
-            else if(auxline[fixedt-DELTA])
-              auxline[fixedt-DELTA]++;
-            else if(auxline[fixedt+DELTA])
-              auxline[fixedt+DELTA]++;
+            if(auxline[fixedt.toFixed(3)])
+              auxline[fixedt.toFixed(3)]++;
+            else if(auxline[(fixedt-DELTA).toFixed(3)])
+              auxline[(fixedt-DELTA).toFixed(3)]++;
+            else if(auxline[(fixedt+DELTA).toFixed(3)])
+              auxline[(fixedt+DELTA).toFixed(3)]++;
             else
-              auxline[fixedt]=1;
+              auxline[fixedt.toFixed(3)]=1;
           }
 
           $.get('https://rawfile.loveliv.es/livejson/{{ mapinfo.notes_setting_asset }}')
@@ -416,7 +420,7 @@
 
               for(var t in auxline)
                 if(auxline[t]>1)
-                  for(time=Math.floor(t-PREFETCH_TIME);time<=Math.ceil(t+1);time++)
+                  for(time=Math.floor(t-PREFETCH_TIME);time<=Math.ceil(parseFloat(t)+1);time++)
                     auxline_map[time].push(t);
               routine();
               msg('Yosoro!');
