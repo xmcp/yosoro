@@ -15,7 +15,7 @@
         #container {
             position: absolute;
             top: 0; bottom: 0; left: 0; right: 0;
-            width: 100%; height: 250px;
+            width: 100%; height: 275px;
             margin: auto;
             text-align: center;
         }
@@ -61,6 +61,7 @@
           if(navigator.userAgent.indexOf('AppleWebKit/')===-1)
             $('#browser-warning').text('推荐使用 Google Chrome 浏览器访问本站。');
           top.window._api_set_current(null);
+          top.window.document.getElementById('main-frame').dataset['livepage']='no';
         })
     </script>
 </head>
@@ -72,7 +73,7 @@
             <small>/ by @xmcp</small>
         </h1>
         <br>
-        <p>来看看精彩绝伦的自动表演。</p>
+        <p><small>完整收录 SIF 国服、日服 {{ maps_count }} 首谱面</small></p>
         <p><small>Special thanks to <a href="http://db.loveliv.es" target="_blank">db.loveliv.es</a></small></p>
         <br>
         <p>

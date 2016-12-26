@@ -6,6 +6,10 @@
     <meta charset="UTF-8">
     <title>Yosoro!</title>
 
+    <link rel="prefetch" href="/static/enter.ogg">
+    <link rel="prefetch" href="/static/clipboard.min.js">
+    <link rel="dns-prefetch" href="https://rawfile.loveliv.es">
+
     <style>
         ::-webkit-scrollbar {
             width: 10px;
@@ -32,9 +36,6 @@
         }
         p {
             margin: 0;
-        }
-        .hidden {
-            display: none;
         }
     </style>
     <style>
@@ -78,24 +79,24 @@
         .map-difficulties {
             text-align: right;
             margin-right: 5px;
-            opacity: 0;
-            transition: opacity .1s;
         }
         .map-difficulty {
             position: relative; z-index: 10;
             display: inline-block;
             border-radius: 2px;
-            background-color: black;
             padding: 0 5px 0 5px;
-            text-shadow: none;
             text-decoration: none;
-            box-shadow: 0 0 5px black;
+            opacity: .4;
+            transition: opacity .1s;
         }
         .map-difficulty:hover {
-            background-color: white;
+            background-color: white !important;
             color: black;
         }
-        .map-item:hover .map-difficulties {
+        .map-item:hover .map-difficulty {
+            background-color: black;
+            text-shadow: none;
+            box-shadow: 0 0 5px black;
             opacity: 1;
         }
         #main-frame, #map-info-frame {
@@ -104,21 +105,32 @@
             height: 100%; width: calc(100% - 400px);
             border: 0;
         }
-        #main-frame {
-            z-index: 10;
-        }
         #map-info-container {
+            z-index: 10;
             position: absolute;
             top: 0; bottom: 0; left: 0; right: 0;
-            width: 100%; height: 400px;
+            width: 100%; height: 425px;
             margin: auto;
             text-align: center;
+        }
+        #map-cover-img {
+            height: 256px; width: 256px;
+            background-color: #aaa;
         }
         #map-name {
             font-size: 1.5em;
         }
         #map-chinese:after, #map-english:after, #map-chinese:before, #map-english:before {
             content: '　';
+        }
+        #map-info-frame.hidden-panel {
+            display: none;
+        }
+        #main-frame[data-livepage="no"].hidden-panel {
+            opacity: 0 !important;
+        }
+        #main-frame.hidden-panel {
+            opacity: .6;
         }
     </style>
     <script src="/static/jquery.min.js"></script>
@@ -146,11 +158,11 @@
 
         function switch_panel(show_info) {
           if(show_info) {
-            $('#main-frame').addClass('hidden');
-            $('#map-info-frame').removeClass('hidden');
+            $('#main-frame').addClass('hidden-panel');
+            $('#map-info-frame').removeClass('hidden-panel');
           } else {
-            $('#main-frame').removeClass('hidden');
-            $('#map-info-frame').addClass('hidden');
+            $('#main-frame').removeClass('hidden-panel');
+            $('#map-info-frame').addClass('hidden-panel');
           }
         }
 
@@ -211,9 +223,10 @@
         {% endfor %}
     </div>
     <iframe src="{{ url_for('welcome_page') }}" id="main-frame" name="main-frame"></iframe>
-    <div id="map-info-frame" class="hidden">
+    <div id="map-info-frame" class="hidden-panel">
         <div id="map-info-container">
-            <img id="map-cover-img" src="" height="256" width="256">
+            <p><img id="map-cover-img" src=""></p>
+            <br>
             <p id="map-chinese"></p>
             <p id="map-name"></p>
             <p id="map-english"></p>

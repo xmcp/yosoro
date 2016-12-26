@@ -19,13 +19,14 @@ def index():
 
 @app.route('/welcome')
 def welcome_page():
-    return render_template('welcome.html')
+    return render_template('welcome.html',maps_count=len(maps))
 
-@app.route('/live/<int:liveid>')
-def live(liveid):
+@app.route('/live/<int:liveid>',defaults={'time':None})
+@app.route('/live/<int:liveid>/<int:time>')
+def live(liveid,time):
     for mapinfo in maps:
         if mapinfo['live_setting_id']==liveid:
-            return render_template('live.html',mapinfo=mapinfo)
+            return render_template('live.html',mapinfo=mapinfo,time=time)
     abort(404)
 
 app.run('0.0.0.0',int(os.environ.get('PORT',80)))

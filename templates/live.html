@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <title>Yosoro! Live</title>
 
+    <link rel="prefetch" href="/static/hit.ogg">
+    <link rel="prefetch" href="/static/back.ogg">
+
     <style>
         body {
             background: transparent;
@@ -118,8 +121,19 @@
             font-family: Consolas, Courier, monospace;
             font-size: 30px;
         }
+        #copy-url-btn {
+            position: fixed;
+            z-index: 100;
+            top: 15px; right: 40px;
+            border: none;
+            background: transparent;
+        }
+        #copy-url-btn img {
+            cursor: pointer;
+        }
     </style>
     <script src="/static/jquery.min.js"></script>
+    <script src="/static/clipboard.min.js"></script>
     <script>
         var EFFECT_IDS={
           1: 'normal',
@@ -160,7 +174,7 @@
           unmute_worker=setTimeout(function() {
             muted=false;
             unmute_worker=null;
-          },17);
+          },36);
         }
 
         function back_to_title() {
@@ -249,7 +263,7 @@
         function pointer_lock_worker() {
           if(document.pointerLockElement===pointer_locker) {
             document.addEventListener('mousemove',_mousemove_callback,false);
-            msg('进入鼠标控制，按右键释放鼠标');
+            msg('进入鼠标控制，右键退出');
           }
           else {
             document.removeEventListener('mousemove',_mousemove_callback,false);
@@ -423,8 +437,14 @@
                   for(time=Math.floor(t-PREFETCH_TIME);time<=Math.ceil(parseFloat(t)+1);time++)
                     auxline_map[time].push(t);
               routine();
-              msg('Yosoro!');
-              player.play();
+              {% if time is none %}
+                msg('Yosoro!');
+                player.play();
+              {% else %}
+                mute();
+                player.currentTime={{ time/100 }};
+                msg('已恢复进度');
+              {% endif %}
             });
         }
 
@@ -453,8 +473,10 @@
             $body
               .css('background','black url(/static/background.png) no-repeat center center fixed')
               .css('background-size','cover');
-          else
+          else {
             top.window._api_set_current({{ mapinfo.live_track_id }});
+            top.window.document.getElementById('main-frame').dataset['livepage']='yes';
+          }
           for(var i=0;i<9;i++)
             $body.append(
               $('<span class="pos-indicator-text" />').css('left',i/9*100+'%').text('9876C4321'.charAt(i))
@@ -462,6 +484,20 @@
           $body.keypress(keyboard_callback);
           $(document).on('pointerlockchange',pointer_lock_worker);
           $(pointer_locker).click(click_callback);
+          var copier=new Clipboard('#copy-url-btn', {
+            text: function() {
+              player.pause();
+              return 'http://'+location.hostname+'/live/{{ mapinfo.live_setting_id }}/'+parseInt(player.currentTime*100);
+            }
+          });
+          copier.on('success',function() {
+            alert(
+              '《{{ mapinfo.name }}》 {{ mapinfo.difficulty_text }} '+parseFloat(player.currentTime).toFixed(2)+' 秒\n'
+              +'指向当前播放进度的链接已经复制到剪切板。');
+          });
+          copier.on('error',function() {
+            alert('链接复制失败');
+          });
           load_map();
         })
     </script>
@@ -470,6 +506,7 @@
 <body>
     <span id="map-title">{{ mapinfo.name }} :: {{ mapinfo.difficulty_text }}</span>
     <a id="back-btn" href="#" onclick="back_to_title()">&times;</a>
+    <button id="copy-url-btn"><img src="/static/link.png" title="分享链接"></button>
     <span id="msg-text">加载谱面……</span>
 
     <div id="stage"></div>
