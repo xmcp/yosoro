@@ -12,6 +12,15 @@
             font-family: 'Segoe UI', '微软雅黑', 'Microsoft Yahei', '黑体', serif;
             text-shadow: 0 0 5px black;
         }
+        #more-btn {
+            position: fixed;
+            top: 5px; right: 10px;
+            height: 1em; width: 1em;
+            text-decoration: none;
+            font-size: 25px;
+            z-index: 100;
+            border-bottom: none !important;
+        }
         #container {
             position: absolute;
             top: 0; bottom: 0; left: 0; right: 0;
@@ -69,6 +78,7 @@
 </head>
 
 <body>
+    <a id="more-btn" href="{{ url_for('custom') }}">+</a>
     <div id="container">
         <h1>
             Yϕsϕrϕ

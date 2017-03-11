@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>Yosoro! Custom Live</title>
+
+    <style>
+        body {
+            background: transparent;
+            background-size: cover;
+            color: white;
+            font-family: 'Segoe UI', '微软雅黑', 'Microsoft Yahei', '黑体', serif;
+            text-shadow: 0 0 5px black;
+        }
+        h1 {
+            font-size: 3em;
+            font-weight: normal;
+        }
+        a {
+            color: inherit !important;
+        }
+        #container {
+            position: absolute;
+            top: 0; bottom: 0; left: 0; right: 0;
+            width: 100%; height: 275px;
+            margin: auto;
+            text-align: center;
+        }
+        #back-btn {
+            position: fixed;
+            top: 5px; right: 10px;
+            height: 1em; width: 1em;
+            text-decoration: none;
+            font-size: 25px;
+            z-index: 100;
+        }
+        .normalize-form input {
+            width: 98px;
+            border-width: 2px;
+        }
+        .normalize-form select {
+            width: 100px;
+        }
+        .normalize-form label {
+            display: inline-block;
+            text-align: right;
+            width: 75px;
+        }
+        #yosoro-btn {
+            font-size: 1.5em;
+        }
+    </style>
+    <script src="/static/jquery.min.js"></script>
+
+    <script>
+        function back_to_title() {
+          if(top && top._api_play_sound)
+            top._api_play_sound('/static/back.ogg');
+          setTimeout(function() {
+            location.href='{{ url_for('welcome_page') }}';
+          },200);
+        }
+    
+        $(function() {
+          if(top.window===window) {
+            $('body')
+              .css('background','black url(/static/background.jpg) no-repeat center center fixed')
+              .css('background-size','cover');
+          } else {
+            top.window._api_set_current(null);
+            top.window.document.getElementById('main-frame').dataset['livepage']='no';
+          }
+        });
+    </script>
+</head>
+
+<body>
+    <a id="back-btn" href="#" onclick="back_to_title()">&times;</a>
+    <div id="container">
+        <form action="{{ url_for('custom_live') }}" method="get" class="normalize-form">
+            <h1>
+                Custom Live
+            </h1>
+            <p>
+                <label for="songid">Song # </label>
+                <input type="text" name="songid">
+            </p>
+            <p>
+                <label for="mapid">Map # </label>
+                <input type="text" name="mapid">
+            </p>
+            <p>
+                <label for="speed">Speed = </label>
+                <select name="speed">
+                    <option value="1.6">1.6 - Easy</option>
+                    <option value="1.3">1.3 - Normal</option>
+                    <option value="1">1.0 - Hard</option>
+                    <option value="0.8">0.8 - Expert</option>
+                    <option value="0.7">0.7 - Master</option>
+                </select>
+            </p>
+            <p>
+                <button type="submit" id="yosoro-btn">Yosoro!</button>
+            </p>
+        </form>
+    </div>
+
+</body>
+</html>

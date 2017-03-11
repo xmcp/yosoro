@@ -141,7 +141,7 @@
           3: 'slider',
           4: 'killer'
         };
-        var PREFETCH_TIME=4;
+        var PREFETCH_TIME={{ 2 if mapinfo.notes_speed<1 else 4 }};
         if(top.global_delay && !isNaN(top.global_delay))
           var OFFSET_MS=top.global_delay;
         else
@@ -246,6 +246,10 @@
           else if(evt.keyCode===108) { // l
             player.currentTime+=5;
             msg('+5s');
+          }
+          else if(evt.keyCode===48) { // 0
+            player.currentTime=0;
+            msg('-> 0s');
           }
           mute();
           fixtime();
